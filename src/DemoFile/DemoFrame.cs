@@ -15,7 +15,7 @@ public sealed class DemoNetworkMessage
     /// <summary>The human-readable name of the network message type.</summary>
     public string MessageName { get; }
 
-    /// <summary>The deserialized protobuf message body, if the message type is known. <c>null</c> for unrecognized types.</summary>
+    /// <summary>The deserialized protobuf message body, if the message type is recognized by the parser. <c>null</c> for message types not handled by the parser implementation.</summary>
     public IMessage? Body { get; }
 
     /// <summary>The size of the raw message data in bytes.</summary>

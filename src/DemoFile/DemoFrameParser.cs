@@ -15,7 +15,7 @@ namespace DemoFile;
 /// </summary>
 public class DemoFrameParser
 {
-    private readonly ArrayPool<byte> _bytePool = ArrayPool<byte>.Create();
+    private readonly ArrayPool<byte> _bytePool = ArrayPool<byte>.Shared;
     private readonly Stream _stream;
     private bool _headerRead;
     private bool _finished;
@@ -233,11 +233,19 @@ public class DemoFrameParser
             if (msgType == (int)NET_Messages.NetNop)
                 continue;
 
-            var msgBuf = new byte[msgSize];
-            buffer.ReadBytes(msgBuf);
+            var rented = _bytePool.Rent(msgSize);
+            try
+            {
+                var msgBuf = rented.AsSpan(0, msgSize);
+                buffer.ReadBytes(msgBuf);
 
-            var (name, body) = ParseSingleNetworkMessage(msgType, msgBuf);
-            messages.Add(new DemoNetworkMessage(msgType, name, body, msgSize));
+                var (name, body) = ParseSingleNetworkMessage(msgType, msgBuf);
+                messages.Add(new DemoNetworkMessage(msgType, name, body, msgSize));
+            }
+            finally
+            {
+                _bytePool.Return(rented);
+            }
         }
 
         return messages;
